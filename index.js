@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var util = require('gulp-util');
 var request = require('request');
 var through = require('through2');
+var retry = require('retry');
 
 var SKIPPED = [];
 var COMPRESSED = [];
@@ -11,6 +12,8 @@ var COMPRESSED = [];
 var CATCH_FILE = './sign.json';
 var PLUGIN_NAME = 'gulp-tinypng-free';
 var log = util.log.bind(null, PLUGIN_NAME);
+
+var attempts = 0
 
 function tinypngFree(opt) {
   opt = opt || {};
@@ -39,15 +42,30 @@ function tinypngFree(opt) {
 
         return callback(null, null);
       }
-
-      tinypng(file, function(data) {
+  
+      tinypng(file, function(err, data) {
         let tinyFile = file.clone();
 
         if (data) {
           tinyFile.contents = data;
           hasher.update(file, hasher.calc(file));
+          hasher.write()
         }
-        return callback(null, tinyFile);
+  
+        
+        var timeout
+        
+        if (err) {
+          attempts += 1
+          timeout = retry.createTimeout(attempts, {retries: Infinity})
+        } else {
+          attempts = 0
+          timeout = 0
+        }
+        
+        setTimeout(function() {
+          return callback(null, tinyFile)
+        }, timeout)
       });
     }
   });
@@ -159,9 +177,9 @@ function tinypng(file, callback) {
     body: file.contents
   }, function(error, response, body) {
     var results, filename;
-
+    filename = path.basename(file.path);
+  
     if (!error) {
-      filename = path.basename(file.path);
       results = JSON.parse(body);
 
       if (results.output && results.output.url) {
@@ -187,15 +205,15 @@ function tinypng(file, callback) {
             });
           }
 
-          callback(err ? null : new Buffer(body));
+          callback(err, err ? null : new Buffer(body));
         });
       } else {
         log('[error]: ', filename + ' ' + results.message);
-        callback(null);
+        callback(new Error(results.message));
       }
     } else {
       SKIPPED.push(filename);
-      callback(null);
+      callback(new Error('unable to make upload the request'));
     }
   });
 }
