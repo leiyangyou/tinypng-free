@@ -13,7 +13,7 @@ var CATCH_FILE = './sign.json';
 var PLUGIN_NAME = 'gulp-tinypng-free';
 var log = util.log.bind(null, PLUGIN_NAME);
 
-var attempts = 1
+var attempts = 0
 
 function tinypngFree(opt) {
   opt = opt || {};
@@ -54,18 +54,20 @@ function tinypngFree(opt) {
         
         
         
+        var timeout
+        
         if (!err) {
           attempts = 0
+          timeout = 0
+        } else {
+          attempts += 1
+          timeout = retry.createTimeout(attempts, {
+            factor: 2,
+            minTimeout: 1 * 1000,
+            maxTimeout: Infinity,
+            randomize: false
+          })
         }
-        
-        attempts += 1
-        
-        var timeout = retry.createTimeout(attempts, {
-          factor: 2,
-          minTimeout: 1 * 1000,
-          maxTimeout: Infinity,
-          randomize: true
-        })
         
         setTimeout(function() {
           return callback(null, tinyFile)
