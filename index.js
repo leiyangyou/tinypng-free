@@ -14,6 +14,7 @@ var PLUGIN_NAME = 'gulp-tinypng-free';
 var log = util.log.bind(null, PLUGIN_NAME);
 
 var attempts = 0
+var successes = 0
 
 function tinypngFree(opt) {
   opt = opt || {};
@@ -52,15 +53,19 @@ function tinypngFree(opt) {
           hasher.write()
         }
         
-        
-        
-        var timeout
+        var timeout = 0
         
         if (!err) {
-          attempts = 0
-          timeout = 0
+          successes += 1
+          if (successes > 5) {
+            attempts = 0
+          }
         } else {
+          successes = 0
           attempts += 1
+        }
+        
+        if (attempts >= 1) {
           timeout = retry.createTimeout(attempts, {
             factor: 2,
             minTimeout: 1 * 1000,
