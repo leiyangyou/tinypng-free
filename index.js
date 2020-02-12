@@ -65,7 +65,7 @@ function tinypngFree(opt) {
             factor: 2,
             minTimeout: 1 * 1000,
             maxTimeout: Infinity,
-            randomize: false
+            randomize: true
           })
         }
         
