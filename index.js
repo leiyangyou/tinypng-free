@@ -57,7 +57,7 @@ function tinypngFree(opt) {
         
         if (err) {
           attempts += 1
-          timeout = retry.createTimeout(attempts, {retries: Infinity})
+          timeout = retry.createTimeout(attempts, {retries: Infinity, randomize: 2})
         } else {
           attempts = 0
           timeout = 0
