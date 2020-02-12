@@ -53,8 +53,6 @@ function tinypngFree(opt) {
         }
         
         
-        var timeout
-        
         if (!err) {
           attempts = 0
         }
