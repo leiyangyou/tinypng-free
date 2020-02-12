@@ -53,15 +53,23 @@ function tinypngFree(opt) {
         }
         
         
+        
         if (!err) {
           attempts = 0
         }
         
         attempts += 1
         
+        var timeout = retry.createTimeout(attempts, {
+          factor: 2,
+          minTimeout: 1 * 1000,
+          maxTimeout: Infinity,
+          randomize: true
+        })
+        
         setTimeout(function() {
           return callback(null, tinyFile)
-        },  retry.createTimeout(attempts, {retries: Infinity, randomize: true}))
+        },  timeout)
       });
     }
   });
